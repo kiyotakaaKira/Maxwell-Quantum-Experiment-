@@ -1,0 +1,87 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2rem;
+  color: #58a6ff;
+  margin-bottom: 8px;
+}
+
+header p {
+  font-size: 1rem;
+  color: #8b949e;
+}
+
+.simulation {
+  background: #161b22;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+}
+
+#simCanvas {
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  background: #0d1117;
+  display: block;
+}
+
+.controls {
+  background: #161b22;
+  padding: 15px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.controls h2 {
+  font-size: 1.2rem;
+  color: #58a6ff;
+  margin-bottom: 10px;
+}
+
+.controls label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.controls input[type="range"] {
+  width: 200px;
+  margin-left: 10px;
+}
+
+.controls button {
+  background: #238636;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.controls button:hover {
+  background: #2ea043;
+}

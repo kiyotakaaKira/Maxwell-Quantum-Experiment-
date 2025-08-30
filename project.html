@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Maxwell's Demon Simulation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0d1117 0%, #1c2128 100%);
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      min-height: calc(100vh - 40px);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #161b22 0%, #1c2128 100%);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      border: 1px solid #30363d;
+      height: fit-content;
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .header {
+      text-align: center;
+      background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid #30363d;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #58a6ff, #79c0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      text-shadow: 0 0 30px rgba(88, 166, 255, 0.3);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: #8b949e;
+      font-weight: 300;
+    }
+
+    .simulation-container {
+      background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      border: 1px solid #30363d;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .simulation-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 30%, rgba(88, 166, 255, 0.05), transparent 50%);
+      pointer-events: none;
+    }
+
+    #simCanvas {
+      border: 2px solid #30363d;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      display: block;
+      width: 100%;
+      height: 500px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .control-group {
+      background: rgba(88, 166, 255, 0.05);
+      border: 1px solid rgba(88, 166, 255, 0.1);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .control-group h3 {
+      font-size: 1.1rem;
+      color: #58a6ff;
+      margin-bottom: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .control-item label {
+      color: #e6edf3;
+      font-weight: 500;
+    }
+
+    .control-value {
+      background: #30363d;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #58a6ff;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      width: 120px;
+      accent-color: #58a6ff;
+      margin: 0 8px;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #58a6ff;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #238636, #2ea043);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      flex: 1;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(35, 134, 54, 0.4);
+    }
+
+    .btn.secondary {
+      background: linear-gradient(135deg, #6e7681, #8b949e);
+    }
+
+    .btn.secondary:hover {
+      box-shadow: 0 6px 20px rgba(110, 118, 129, 0.4);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .stat-item {
+      background: #0d1117;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #8b949e;
+      display: block;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #58a6ff;
+      font-family: monospace;
+    }
+
+    .temperature-display {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .temp-gauge {
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .temp-gauge.left {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .temp-gauge.right {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .temp-gauge h4 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: #8b949e;
+    }
+
+    .temp-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .temp-gauge.left .temp-value {
+      color: #3b82f6;
+    }
+
+    .temp-gauge.right .temp-value {
+      color: #ef4444;
+    }
+
+    .info-panel {
+      background: linear-gradient(135deg, #1c2128, #161b22);
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #30363d;
+      font-size: 0.85rem;
+      color: #8b949e;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      .sidebar {
+        order: 2;
+      }
+      
+      #simCanvas {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="control-group">
+        <h3>🎛️ Simulation Controls</h3>
+        
+        <div class="control-item">
+          <label>Particles</label>
+          <div style="display: flex; align-items: center;">
+            <input type="range" id="particleCount" min="10" max="200" value="80">
+            <span class="control-value" id="particleCountValue">80</span>
+          </div>
+        </div>
+
+        <div class="control-item">
+          <label>Speed Threshold</label>
+          <div style="display: flex; align-items: center;">
+            <input type="range" id="threshold" min="0.5" max="8" step="0.1" value="3.0">
+            <span class="control-value" id="thresholdValue">3.0</span>
+          </div>
+        </div>
+
+        <div class="control-item">
+          <label>Gate Width</label>
+          <div style="display: flex; align-items: center;">
+            <input type="range" id="gateWidth" min="10" max="60" value="25">
+            <span class="control-value" id="gateWidthValue">25</span>
+          </div>
+        </div>
+
+        <div class="control-item">
+          <label>Demon Active</label>
+          <input type="checkbox" id="demonActive" checked>
+        </div>
+
+        <div class="button-group">
+          <button class="btn" id="resetBtn">🔄 Reset</button>
+          <button class="btn secondary" id="randomizeBtn">🎲 Shuffle</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>📊 Live Statistics</h3>
+        
+        <div class="temperature-display">
+          <div class="temp-gauge left">
+            <h4>Left Chamber</h4>
+            <div class="temp-value" id="leftTemp">0.00</div>
+            <div style="font-size: 0.8rem; margin-top: 4px;">
+              Count: <span id="leftCount">0</span>
+            </div>
+          </div>
+          <div class="temp-gauge right">
+            <h4>Right Chamber</h4>
+            <div class="temp-value" id="rightTemp">0.00</div>
+            <div style="font-size: 0.8rem; margin-top: 4px;">
+              Count: <span id="rightCount">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Temp Ratio</span>
+            <span class="stat-value" id="tempRatio">1.00</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Separation</span>
+            <span class="stat-value" id="separation">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>⚡ Quick Presets</h3>
+        <div class="button-group">
+          <button class="btn secondary" id="presetBasic">Basic</button>
+          <button class="btn secondary" id="presetAdvanced">Advanced</button>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <strong>Maxwell's Demon:</strong> Watch as the demon sorts particles by speed, creating a temperature difference between chambers. Fast particles (red/warm) are allowed to pass right, while slow particles (blue/cool) are blocked or sent left.
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>Maxwell's Demon</h1>
+        <p>Interactive Thermodynamics Simulation</p>
+      </div>
+
+      <div class="simulation-container">
+        <canvas id="simCanvas" width="800" height="500"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("simCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Auto-resize canvas to fit container
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width - 40; // Account for padding
+      canvas.height = 500;
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Simulation state
+    let particles = [];
+    let demonActive = true;
+    let speedThreshold = 3.0;
+    let gateWidth = 25;
+    let animationId;
+
+    // UI elements
+    const particleCountSlider = document.getElementById("particleCount");
+    const particleCountValue = document.getElementById("particleCountValue");
+    const thresholdSlider = document.getElementById("threshold");
+    const thresholdValue = document.getElementById("thresholdValue");
+    const demonCheckbox = document.getElementById("demonActive");
+    const gateWidthSlider = document.getElementById("gateWidth");
+    const gateWidthValue = document.getElementById("gateWidthValue");
+    const resetBtn = document.getElementById("resetBtn");
+    const randomizeBtn = document.getElementById("randomizeBtn");
+    const presetBasic = document.getElementById("presetBasic");
+    const presetAdvanced = document.getElementById("presetAdvanced");
+
+    // Stats elements
+    const leftTempEl = document.getElementById("leftTemp");
+    const rightTempEl = document.getElementById("rightTemp");
+    const leftCountEl = document.getElementById("leftCount");
+    const rightCountEl = document.getElementById("rightCount");
+    const tempRatioEl = document.getElementById("tempRatio");
+    const separationEl = document.getElementById("separation");
+
+    // Particle class with enhanced physics
+    class Particle {
+      constructor(x, y, vx, vy, r, mass = 1) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.r = r;
+        this.mass = mass;
+        this.prevX = x;
+        this.trail = [];
+        this.maxTrail = 5;
+      }
+
+      draw() {
+        const speed = this.getSpeed();
+        
+        // Enhanced color mapping: blue (cold) to red (hot)
+        const normalizedSpeed = Math.min(speed / 8, 1);
+        const hue = (1 - normalizedSpeed) * 240; // 240 (blue) to 0 (red)
+        const saturation = 70 + normalizedSpeed * 30;
+        const lightness = 45 + normalizedSpeed * 15;
+        
+        // Draw subtle trail
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < this.trail.length; i++) {
+          const alpha = (i + 1) / this.trail.length * 0.3;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          ctx.beginPath();
+          ctx.arc(this.trail[i].x, this.trail[i].y, this.r * (alpha + 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Draw main particle
+        ctx.globalAlpha = 1;
+        const gradient = ctx.createRadialGradient(this.x - this.r/3, this.y - this.r/3, 0, this.x, this.y, this.r);
+        gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${lightness + 20}%)`);
+        gradient.addColorStop(1, `hsl(${hue}, ${saturation}%, ${lightness}%)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Glowing edge effect
+        ctx.strokeStyle = `hsl(${hue}, ${saturation}%, ${lightness + 30}%)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Speed indicator (small dot for fast particles)
+        if (speed > speedThreshold) {
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      update(dt = 0.8) {
+        // Update trail
+        this.trail.push({x: this.x, y: this.y});
+        if (this.trail.length > this.maxTrail) {
+          this.trail.shift();
+        }
+        
+        this.prevX = this.x;
+        
+        // Physics integration
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        
+        // Enhanced wall bouncing with slight energy damping
+        const damping = 0.98;
+        if (this.x - this.r < 0) {
+          this.x = this.r;
+          this.vx *= -damping;
+        }
+        if (this.x + this.r > canvas.width) {
+          this.x = canvas.width - this.r;
+          this.vx *= -damping;
+        }
+        if (this.y - this.r < 0) {
+          this.y = this.r;
+          this.vy *= -damping;
+        }
+        if (this.y + this.r > canvas.height) {
+          this.y = canvas.height - this.r;
+          this.vy *= -damping;
+        }
+
+        this.handleGate();
+        this.draw();
+      }
+
+      handleGate() {
+        const gateX = canvas.width / 2;
+        const halfWidth = gateWidth / 2;
+        
+        if (Math.abs(this.x - gateX) < halfWidth + this.r) {
+          const crossedFromLeft = this.prevX < gateX && this.x >= gateX;
+          const crossedFromRight = this.prevX > gateX && this.x <= gateX;
+          
+          if ((crossedFromLeft || crossedFromRight) && demonActive) {
+            const speed = this.getSpeed();
+            
+            // Enhanced demon logic with some randomness (90% accuracy)
+            const randomFactor = 0.1; // 10% chance of error
+            const shouldPass = Math.random() < randomFactor ? 
+              Math.random() < 0.5 : 
+              (crossedFromLeft && speed > speedThreshold) || 
+              (crossedFromRight && speed <= speedThreshold);
+            
+            if (!shouldPass) {
+              this.vx *= -1.1; // Slight energy boost on reflection
+              
+              if (crossedFromLeft) {
+                this.x = gateX - halfWidth - this.r - 2;
+              } else {
+                this.x = gateX + halfWidth + this.r + 2;
+              }
+            }
+          }
+        }
+      }
+
+      getSpeed() {
+        return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+      }
+
+      getKineticEnergy() {
+        return 0.5 * this.mass * (this.vx * this.vx + this.vy * this.vy);
+      }
+    }
+
+    // Enhanced collision detection
+    function handleCollisions() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const p1 = particles[i];
+          const p2 = particles[j];
+          
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < p1.r + p2.r && distance > 0) {
+            // More realistic collision response
+            const angle = Math.atan2(dy, dx);
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            
+            // Rotate velocities
+            const vx1 = p1.vx * cos + p1.vy * sin;
+            const vy1 = p1.vy * cos - p1.vx * sin;
+            const vx2 = p2.vx * cos + p2.vy * sin;
+            const vy2 = p2.vy * cos - p2.vx * sin;
+            
+            // Elastic collision with energy conservation
+            const totalMass = p1.mass + p2.mass;
+            const newVx1 = ((p1.mass - p2.mass) * vx1 + 2 * p2.mass * vx2) / totalMass;
+            const newVx2 = ((p2.mass - p1.mass) * vx2 + 2 * p1.mass * vx1) / totalMass;
+            
+            // Rotate back and apply slight damping
+            const damping = 0.99;
+            p1.vx = (newVx1 * cos - vy1 * sin) * damping;
+            p1.vy = (vy1 * cos + newVx1 * sin) * damping;
+            p2.vx = (newVx2 * cos - vy2 * sin) * damping;
+            p2.vy = (vy2 * cos + newVx2 * sin) * damping;
+            
+            // Separate particles to prevent overlap
+            const overlap = (p1.r + p2.r - distance) / 2;
+            const separationX = (dx / distance) * overlap;
+            const separationY = (dy / distance) * overlap;
+            
+            p1.x += separationX;
+            p1.y += separationY;
+            p2.x -= separationX;
+            p2.y -= separationY;
+          }
+        }
+      }
+    }
+
+    function initParticles(n) {
+      particles = [];
+      const margin = 20;
+      
+      for (let i = 0; i < n; i++) {
+        const r = 4 + Math.random() * 3; // Radius 4-7
+        const x = Math.random() * (canvas.width - 2 * margin) + margin;
+        const y = Math.random() * (canvas.height - 2 * margin) + margin;
+        
+        // More varied initial velocities
+        const speed = 0.5 + Math.random() * 5;
+        const angle = Math.random() * Math.PI * 2;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        
+        particles.push(new Particle(x, y, vx, vy, r));
+      }
+    }
+
+    function drawGate() {
+      const gateX = canvas.width / 2;
+      const halfWidth = gateWidth / 2;
+      
+      // Draw gate area with gradient
+      const gradient = ctx.createLinearGradient(gateX - halfWidth, 0, gateX + halfWidth, 0);
+      gradient.addColorStop(0, demonActive ? "rgba(88, 166, 255, 0.15)" : "rgba(139, 148, 158, 0.1)");
+      gradient.addColorStop(0.5, demonActive ? "rgba(88, 166, 255, 0.05)" : "rgba(139, 148, 158, 0.05)");
+      gradient.addColorStop(1, demonActive ? "rgba(88, 166, 255, 0.15)" : "rgba(139, 148, 158, 0.1)");
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(gateX - halfWidth, 0, gateWidth, canvas.height);
+      
+      // Animated gate borders
+      const time = Date.now() * 0.003;
+      const pulseAlpha = demonActive ? 0.3 + Math.sin(time) * 0.2 : 0.2;
+      
+      ctx.strokeStyle = demonActive ? 
+        `rgba(88, 166, 255, ${pulseAlpha})` : 
+        `rgba(139, 148, 158, ${pulseAlpha})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(gateX - halfWidth, 0);
+      ctx.lineTo(gateX - halfWidth, canvas.height);
+      ctx.moveTo(gateX + halfWidth, 0);
+      ctx.lineTo(gateX + halfWidth, canvas.height);
+      ctx.stroke();
+      
+      // Center line
+      ctx.strokeStyle = `rgba(88, 166, 255, ${pulseAlpha * 0.5})`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(gateX, 0);
+      ctx.lineTo(gateX, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Demon indicator
+      if (demonActive) {
+        ctx.fillStyle = "#58a6ff";
+        ctx.font = "20px Segoe UI";
+        ctx.textAlign = "center";
+        ctx.fillText("👹", gateX, 30);
+      }
+    }
+
+    function drawBackground() {
+      // Animated gradient background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#0d1117");
+      gradient.addColorStop(0.5, "#161b22");
+      gradient.addColorStop(1, "#1c2128");
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Subtle grid pattern
+      ctx.strokeStyle = "rgba(48, 54, 61, 0.3)";
+      ctx.lineWidth = 0.5;
+      const gridSize = 40;
+      
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+    }
+
+    function calculateStats() {
+      let leftParticles = [];
+      let rightParticles = [];
+      
+      particles.forEach(p => {
+        if (p.x < canvas.width / 2) {
+          leftParticles.push(p);
+        } else {
+          rightParticles.push(p);
+        }
+      });
+      
+      const leftTemp = leftParticles.length > 0 ? 
+        leftParticles.reduce((sum, p) => sum + p.getKineticEnergy(), 0) / leftParticles.length : 0;
+      const rightTemp = rightParticles.length > 0 ? 
+        rightParticles.reduce((sum, p) => sum + p.getKineticEnergy(), 0) / rightParticles.length : 0;
+      
+      const tempRatio = leftTemp > 0 ? rightTemp / leftTemp : 1;
+      const separation = Math.abs(leftParticles.length - rightParticles.length) / particles.length * 100;
+      
+      // Update UI with smooth transitions
+      leftTempEl.textContent = leftTemp.toFixed(2);
+      rightTempEl.textContent = rightTemp.toFixed(2);
+      leftCountEl.textContent = leftParticles.length;
+      rightCountEl.textContent = rightParticles.length;
+      tempRatioEl.textContent = tempRatio.toFixed(2);
+      separationEl.textContent = separation.toFixed(0) + '%';
+    }
+
+    let frameCount = 0;
+    function animate() {
+      frameCount++;
+      
+      // Clear and draw background
+      drawBackground();
+      
+      // Draw gate
+      drawGate();
+      
+      // Handle physics (reduce collision frequency for performance)
+      if (frameCount % 2 === 0) {
+        handleCollisions();
+      }
+      
+      // Update and draw particles
+      particles.forEach(p => p.update());
+      
+      // Update stats
+      calculateStats();
+      
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Enhanced UI event handlers
+    function updateSliderValue(slider, valueElement, callback) {
+      slider.addEventListener("input", (e) => {
+        const value = parseFloat(e.target.value);
+        valueElement.textContent = slider.id === 'threshold' ? value.toFixed(1) : value;
+        if (callback) callback(value);
+      });
+    }
+
+    updateSliderValue(particleCountSlider, particleCountValue);
+    updateSliderValue(thresholdSlider, thresholdValue, (value) => {
+      speedThreshold = value;
+    });
+    updateSliderValue(gateWidthSlider, gateWidthValue, (value) => {
+      gateWidth = value;
+    });
+
+    demonCheckbox.addEventListener("change", (e) => {
+      demonActive = e.target.checked;
+    });
+
+    resetBtn.addEventListener("click", () => {
+      const count = parseInt(particleCountSlider.value);
+      initParticles(count);
+    });
+
+    randomizeBtn.addEventListener("click", () => {
+      particles.forEach(p => {
+        const speed = 0.5 + Math.random() * 5;
+        const angle = Math.random() * Math.PI * 2;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed;
+        p.trail = []; // Clear trail
+      });
+    });
+
+    presetBasic.addEventListener("click", () => {
+      particleCountSlider.value = 50;
+      particleCountValue.textContent = "50";
+      thresholdSlider.value = 2.0;
+      thresholdValue.textContent = "2.0";
+      gateWidthSlider.value = 25;
+      gateWidthValue.textContent = "25";
+      demonCheckbox.checked = true;
+      speedThreshold = 2.0;
+      gateWidth = 25;
+      demonActive = true;
+      initParticles(50);
+    });
+
+    presetAdvanced.addEventListener("click", () => {
+      particleCountSlider.value = 120;
+      particleCountValue.textContent = "120";
+      thresholdSlider.value = 5.0;
+      thresholdValue.textContent = "5.0";
+      gateWidthSlider.value = 40;
+      gateWidthValue.textContent = "40";
+      demonCheckbox.checked = true;
+      speedThreshold = 5.0;
+      gateWidth = 40;
+      demonActive = true;
+      initParticles(120);
+    });
+
+    // Initialize simulation
+    initParticles(parseInt(particleCountSlider.value));
+    animate();
+  </script>
